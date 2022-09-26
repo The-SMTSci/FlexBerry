@@ -1,0 +1,17 @@
+*.bad
+*.bak
+*.pyc
+.*.o
+.pdbrc
+\#
+bak.*
+bar
+baz
+foo
+milk
+poop
+quux
+slop
+xxx
+yyy
+zzz
