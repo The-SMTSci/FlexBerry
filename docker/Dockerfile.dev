@@ -68,14 +68,14 @@ RUN cd /home/flex                                                        && \
 RUN cd /home/flex/git                                                    && \
     git clone https://github.com/bblanchon/ArduinoJson.git
 
-RUN chown -R flex:flex /home/flex
-
 RUN cp /home/flex/git/FlexSpec1/Code/HOME/pi.aliases /home/flex/.aliases && \
     cp /home/flex/git/FlexSpec1/Code/HOME/vimrc      /home/flex/.vimrc   && \
     cp /home/flex/git/FlexSpec1/Code/HOME/vimrc      /root/.vimrc        && \
     chown root:root /root/.vimrc
 
 RUN echo 'source .aliases' >> /home/flex/.bashrc
+
+RUN chown -R flex:flex /home/flex           # make us own us
 
 # wake up as flex, use su root or use sudo
 USER     flex
