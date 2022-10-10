@@ -24,8 +24,8 @@ LABEL maintainer="Wayne Green <dxwayne@gmail.com>"
 LABEL build_date="2022-10-10"
 
 
-ENV DEBIAN_FRONTEND=noninteractive          # remove interactive needs
-ENV DEBCONF_NONINTERACTIVE_SEEN=true        # for the installs
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN=true
 
 RUN apt-get -y update                       # the latests lists
 RUN apt-get install -y apt-utils            # get the new list
@@ -42,6 +42,7 @@ RUN apt-get install -y cmake                # needed for ArduinoJson and others.
 RUN useradd --shell /bin/bash -m -d /home/flex -G dialout -p "$(openssl passwd -1 'flex')" flex
 RUN useradd -aG sudo flex                   # add flex to sudoers
 RUN chown -R flex:flex /home/flex
+RUN usermod -p "$(openssl passwd -1 'flex')" root
 
 RUN apt-get install -y curl                 # because,,, curl! (astrometry.net)
 RUN apt-get install -y gawk                 # IDIOTS -- don't ever use mawk!
