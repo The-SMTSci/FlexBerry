@@ -35,12 +35,12 @@ Run apt-get -y upgrade                      # grab the upgrade things.
 # rm -rf /var/cache/apt/archives/*.deb # when done
 
 RUN apt-get install -y build-essential      # Compiler and friends
-RUN apt install sudo                        # the sudo command
+RUN apt-get install sudo                    # the sudo command
 RUN apt-get install -y cmake                # needed for ArduinoJson and others...
 
 # Create a basic user with /home/flex and password of flex.
 RUN useradd --shell /bin/bash -m -d /home/flex -G dialout -p "$(openssl passwd -1 'flex')" flex
-RUN useradd -aG sudo flex                   # add flex to sudoers
+RUN usermod -aG sudo flex                   # add flex to sudoers
 RUN chown -R flex:flex /home/flex
 RUN usermod -p "$(openssl passwd -1 'flex')" root
 
@@ -79,6 +79,7 @@ RUN echo 'source .aliases' >> /home/flex/.bashrc
 RUN chown -R flex:flex /home/flex           # make us own us
 
 # wake up as flex, use su root or use sudo
+# run -it ... --user root ...
 USER     flex
 WORKDIR  /home/flex
 
