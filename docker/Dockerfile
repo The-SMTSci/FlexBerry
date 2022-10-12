@@ -30,19 +30,19 @@ ENV DEBCONF_NONINTERACTIVE_SEEN=true
 RUN apt-get -y update                       # the latests lists
 RUN apt-get install -y apt-utils            # get the new list
 Run apt-get -y upgrade                      # grab the upgrade things.
-
 # keep the packages inside this continer (HUGE!!!)
 # rm -rf /var/cache/apt/archives/*.deb # when done
 
 RUN apt-get install -y build-essential      # Compiler and friends
 RUN apt-get install sudo                    # the sudo command
 RUN apt-get install -y cmake                # needed for ArduinoJson and others...
+RUN apt-get install -y python3-pip
 
 # Create a basic user with /home/flex and password of flex.
 RUN useradd --shell /bin/bash -m -d /home/flex -G dialout -p "$(openssl passwd -1 'flex')" flex
 RUN usermod -aG sudo flex                   # add flex to sudoers
 RUN chown -R flex:flex /home/flex
-RUN usermod -p "$(openssl passwd -1 'flex')" root
+RUN usermod -p "$(openssl passwd -1 'flex')" root # let sudo work with a passwd
 
 RUN apt-get install -y curl                 # because,,, curl! (astrometry.net)
 RUN apt-get install -y gawk                 # IDIOTS -- don't ever use mawk!
@@ -58,6 +58,7 @@ RUN htpasswd -b  /etc/nginx/.htpasswd flex  "flex"         # TODO  make more sec
 RUN bash -c 'rm /etc/alternatives/editor; ln -s /usr/bin/vim.basic /etc/alternatives/editor;'
 
 RUN apt-get install -y git                  # because,,, git! (astrometry.net)
+RUN apt-get install -y python3-pip
 RUN apt-get install -y python3-virtualenv   # good practice
 
 RUN cd /home/flex                                                        && \
@@ -79,9 +80,11 @@ RUN echo 'source .aliases' >> /home/flex/.bashrc
 RUN chown -R flex:flex /home/flex           # make us own us
 
 # wake up as flex, use su root or use sudo
-# run -it ... --user root ...
+# run -it ... --user root ... to wake up as root
+# this line wakes up as 'us' = flex in our home dir
 USER     flex
 WORKDIR  /home/flex
 
+# wake up in the bash shell not dash
 CMD      /bin/bash
 
