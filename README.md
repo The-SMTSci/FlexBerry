@@ -9,4 +9,16 @@ A stretch goal is to manage alerts and scheduling.
 
 Current status is rough-as-a-cob.
 
-.
+Download the [Ubuntu 22.04 for Raspberry](https://ubuntu.com/download/raspberry-pi)
+Burn onto a larger SD card
+Boot the Raspberry Pi, take the quiz.
+#. User Name and Machine name.
+Reboot the RPi, run the few commands.
+
+*sudo apt update*
+
+*sudo apt upgrade*
+
+*sudo apt install -y git*
+
+*git clone https://github.com/The-SMTSci/FlexBerry.git*
