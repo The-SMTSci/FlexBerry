@@ -1,5 +1,11 @@
 # FlexBerry
-A Raspberry Pi 4b implementation of Ubuntu 22.04 (not raspbian) for coordinated astronomy.
+
+**WARNING: UNDER ACTIVE DEVELOPMENT JAN 2023**
+
+A Raspberry Pi 4b implementation of Ubuntu 22.04 Desktop (not raspbian) for coordinated astronomy.
+
+1) Click on the green CODE button above.
+2) Choose the 
 
 The Ununtu 22.04 64 bit OS is created to serve as a central hub of a network of other pi's for local to global use. It uses systemd, supervisor, gnuicorn, nginx, flask, bokeh to allow WEB APIs for controlling our FlexSpec1 project.
 
