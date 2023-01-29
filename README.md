@@ -2,8 +2,11 @@
 
 **WARNING: UNDER ACTIVE DEVELOPMENT JAN 2023**
 
+
+FollowMe.sh usage...
+--------------------
+
 ````
-FollowMe.sh usage..."
   Change directory to your home directory."                            
                                                                  
      wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/Follow"
