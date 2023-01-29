@@ -21,9 +21,11 @@
 #
 #############################################################################
 # ssh -l pier15 pier15.local  # see remove old key above
+scriptargs=("$@")
+export FLEXUSER=${scriptargs[0]}            # pick up the user for this script
 
-if [[ "root" !~ "$PATH" ]] ; then
-   echo "Must be root, not $USER, to run. Use 'sudo -s' in terminal.";
+if [[ ! "root" =~ "$USER" ]] ; then
+   echo "Must be root, not $USER, to run. Use 'sudo -s bash FollowMe.sh' in terminal.";
    exit 1
 fi
 
@@ -86,7 +88,6 @@ git clone https://github.com/The-SMTSci/FlexSpec1.git
 #hostnamectl set-hostname pier15          # force hostname
 
 # add a special user, all system configuration activity here.
-export FLEXUSER=flex
 useradd -m -d /home/$FLEXUSER -G dialout -p "$(openssl passwd -1 'happy startrails')" $FLEXUSER
 
 usermod -aG dialout $FLEXUSER     # allow user 'flex' ability to use facilities
