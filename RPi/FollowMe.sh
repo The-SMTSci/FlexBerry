@@ -21,8 +21,41 @@
 #
 #############################################################################
 # ssh -l pier15 pier15.local  # see remove old key above
+
+function usage   { echo "FollowMe.sh usage..."
+                   echo "  Change directory to your home directory."
+                   echo ""
+                   echo "     wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/Follow"
+                   echo ""
+                   echo "  Then run the script to change your RPi into a FlexBerry:"
+                   echo ""
+                   echo "  The FollowMe script takes two parameters:"
+                   echo "    1) The desired hostname"
+                   echo "    2) The desired username"
+                   echo ""
+                   echo "     sudo bash FollowMe.sh flexberry itsme"
+                   echo ""
+                   echo "  This will take quite a while. There are over 30 packages to install."
+
+                   if test -e /sys/firmware/devicetree/base/model ; then
+                       echo $(cat /sys/firmware/devicetree/base/model);
+                   fi
+                 }
+
+if [[ "$#" != 2 ]] ; then
+   usage
+   exit 1
+fi
+
+##############################################################################
+# Get the hostname and username in gear.
+#
+##############################################################################
 scriptargs=("$@")
-export FLEXUSER=${scriptargs[0]}            # pick up the user for this script
+export FLEXHOST=${scriptargs[0]}            # pick up the user for this script
+export FLEXUSER=${scriptargs[1]}            # pick up the user for this script
+echo "Using host=$FLEXHOST  user=$FLEXUSER"
+
 
 if [[ ! "root" =~ "$USER" ]] ; then
    echo "Must be root, not $USER, to run. Use 'sudo -s bash FollowMe.sh' in terminal.";
@@ -38,29 +71,15 @@ flexpackages=("openssh-server" "linux-modules-extra-raspi" "net-tools" \
                   "gh" "curl" "gawk" "vim" "minicom" "git" "locate" "libx11-dev" \
                   "zlib1g-dev" "libxml2-dev" "libxslt1-dev" "autoconf" "swig" "putty" \
                   "python3-dev" "python3-pip" "python3-virtualenv" "sqlite3" \
-                  "pip" "sqlitebrowser" "supervisor" "samba" "samba-tools"\
+                  "pip" "sqlitebrowser" "supervisor" "samba" "samba-tools" \
                   "build-essential" "apache2-utils" "filezilla" \
                   "nginx" "sqlite3" "indi-full" "gsc" "iraf" "python-pyraf3" )
 
 basepackages=("ufw" "systemctl" "bind9")
 
 pythonpackages=( "numpy" "scipy" "pandas" "matplotlib" "bokeh" "pandas" \
-                   "astropy" "gunicorn" "pysqlite3" "xpa")
+                   "astropy" "gunicorn" "pysqlite3" "xpa" )
 
-function usage   { echo "This script is located in a github repo:";
-                   echo "/FlexSpec1/Code/rpi/FollowMe.sh";
-                   echo "Run as root: ";
-                   echo "mkdir -p /home/git";
-                   echo "apt install -y git";
-                   echo "cd /home/git";
-                   echo "git clone https://github.com/The-SMTSci/FlexSpec1.git";
-                   echo "cd /home/git/Code/rpi";
-                   echo "bash FollowMe.sh";
-                   echo "Packages: $flexpackages $basepackages $pythonpackages";
-                   if test -e /sys/firmware/devicetree/base/model ; then
-                       echo $(cat /sys/firmware/devicetree/base/model);
-                   fi
-                 }
 
 #############################################################################
 # The real work as root.
@@ -149,26 +168,6 @@ apt     install -y swig
 apt     install -y python3-dev python3-pip python3-virtualenv
 
 #############################################################################
-# Grab the initialization scripts,files and data from FlexSpec needs....
-# fixup $FLEXUSER/.bashrc
-#############################################################################
-cd /home/$FLEXUSER/git                                     # get the FlexSpec and install
-git clone https://github.com/The-SMTSci/FlexSpec1.git
-export ANCHOR=/home/$FLEXUSER/git/FlexSpec1
-cd /home/$FLEXUSER/git/FlexSpec1/Code/HOME
-cp pi.aliases /home/$FLEXUSER/.pi.aliases                  # handy aliases
-cp vimrc      /home/$FLEXUSER/.vimrc
-cp vimrc      /root                          # add a decent vimrc for sudo
-mkdir -p /var/www/html/FlexSpec1
-cp -pr /home/$FLEXUSER/git/FlexSpec1/build/html/* /var/www/html/FlexSpec1 # install FlexHelp
-
-# helper for flex login
-cd /home/$FLEXUSER
-cat >> ~/.bashrc  <<EOF2                     # add our aliases for FLEXUSER
-source .pi.aliases
-EOF2
-
-#############################################################################
 # This is a dedicated system, pound our opinion of python at the
 # system level, not a virtualenv.
 # Load up Python3 with the extra bits we really want.
@@ -190,6 +189,8 @@ pip install pysqlite3
 
 #############################################################################
 # Load up Kstars/Ekos/libindi and drivers.
+# Might want to maintain local copies of big catalogs
+# May not want big catalogs!
 #############################################################################
 apt-add-repository ppa:mutlaqja/ppa          # Libindi etc.
 apt     update
@@ -198,11 +199,44 @@ apt     install  -y gsc
 #apt     install -y kstars-bleeding
 
 #############################################################################
+# Add handy user code
+#############################################################################
+apt install -y filezilla                     # GUI to move files between systems
+
+#############################################################################
+# Grab the initialization scripts,files and data from FlexSpec needs....
+# fixup $FLEXUSER/.bashrc
+#############################################################################
+mkdir -p /home/$FLEXUSER/git                 # local repos in user space
+cd /home/$FLEXUSER/git                       # get the FlexSpec and install
+git clone https://github.com/The-SMTSci/FlexSpec1.git
+export ANCHOR=/home/$FLEXUSER/git/FlexSpec1
+cd /home/$FLEXUSER/git/FlexSpec1/Code/HOME
+cp pi.aliases /home/$FLEXUSER/.pi.aliases    # handy aliases
+cp vimrc      /home/$FLEXUSER/.vimrc
+cp vimrc      /root                          # add a decent vimrc for sudo
+mkdir -p /var/www/html/FlexSpec1
+cp -pr /home/$FLEXUSER/git/FlexSpec1/build/html/* /var/www/html/FlexSpec1 # install FlexHelp
+cd /home/$FLEXUSER
+
+# helper for flex login
+cd /home/$FLEXUSER
+cat >> ~/.bashrc  <<EOF2                     # add our aliases for FLEXUSER
+source .pi.aliases
+EOF2
+
+cat >> ~/.profile  <<EOF2                    # add our aliases for FLEXUSER
+source .pi.aliases
+EOF2
+
+chown -R $FLESUSER .                         # give all the files to the user.
+
+#############################################################################
 # Add some file connectivity.
 # DIFS is Common Internet Fileshares
 #############################################################################
 apt install -y samba samba-tools smbclient cifs-utils
-systemctl enable --now smbd                  # register for all reboots
+systemctl --no-pager enable --now smbd                  # register for all reboots
 
 usermod -aG sambashare $FLEXUSER             # let $FLEXUSER share with smb.
 smbpasswd -a "flex%time has come"            # initial password...
@@ -211,8 +245,8 @@ chgrp -R sambashare /samba
 
 #smb://winhost/shared-folder-name
 # TODO mod /etc/samba/smb.conf
-systemctl restart smbd                       # Start the SMB service
-systemctl restart nmbd                       # Microsoft NETBIOS stuff
+systemctl --no-pager restart smbd                       # Start the SMB service
+systemctl --no-pager restart nmbd                       # Microsoft NETBIOS stuff
 
 #############################################################################
 # NFS - for other linux like clients
@@ -222,7 +256,7 @@ mkdir -p /mnt/share
 chown -R nobody:nogroup /mnt/share/
 chmod 777 /mnt/share/
 exportfs -a
-systemctl restart nfs-kernel-server          # start nfs
+systemctl --no-pager restart nfs-kernel-server          # start nfs
 
 # add daemons
 # cp ANCHOR/bokeh/bokeh.service /etc/systemd/system/bokeh.service
@@ -234,7 +268,7 @@ systemctl restart nfs-kernel-server          # start nfs
 # Install and configure nginx
 #   apt install nginx
 #   cp the files from FlexSpec repo into place
-# q
+#
 #############################################################################
 
 apt install -y nginx                         # nginx local access to bokeh
@@ -260,7 +294,7 @@ ln -s FlexSpec flexspec                      # allow lowercase name maintain cas
 echo "make nginx"                            # TODO
 
 # get it operational now.
-systemctl restart nginx
+systemctl --no-pager restart nginx
 
 # Get the CIDR net/mask
 
@@ -275,19 +309,12 @@ systemctl restart nginx
 apt install -y bind9 bind9-utils             # DNS
 
 #############################################################################
-# Add handy user code
-#############################################################################
-apt install -y filezilla                     # GUI to move files between systems
-
-#############################################################################
-# Add Iraf/Pyraf
+# Add Iraf/Pyraf! Yea.
 #############################################################################
 
 apt install -y iraf
 apt install -y python-pyraf3
 
-netinterface=$(ip -f inet -o addr | awk -e '/e(th|no)[0-9]/ { print $2;}')
-cidrnet=$(ip -f inet -o addr | awk -e '/e(th|no)[0-9]/ { print $4;}')
 
 #############################################################################
 # ufw : Brew up and activate a sloppy IPTABLES for the firewall
@@ -295,6 +322,10 @@ cidrnet=$(ip -f inet -o addr | awk -e '/e(th|no)[0-9]/ { print $4;}')
 # /etc/ufw/user.rules
 # /etc/ufw/user6.rules
 #############################################################################
+# make sure to gawk -- the default is too puny.
+netinterface=$(ip -f inet -o addr | gawk -e '/e(th|no)[0-9]/ { print $2;}')
+cidrnet=$(ip -f inet -o addr | gawk -e '/e(th|no)[0-9]/ { print $4;}')
+
 ufw allow in on $netinterface from $cidrnet
 ufw allow ssh                                        # allow ssh in the firewall
 ufw allow dns                                        # bind9
@@ -310,7 +341,6 @@ ufw allow 1194/udp                                   # VPN
 ufw allow 1194/tcp                                   # remember for next time TODO
 ufw disable
 ufw enable
-
 
 
 #############################################################################
@@ -338,15 +368,15 @@ ufw enable
 #  say "No"  to "Would you like login shell to be accessible over serial?"
 #  say "Yes" to "Would you like the serial port hardware to be enabled? "
 # FAT: config.txt
-# dtoverlay=uart2 
-# dtoverlay=uart3 
-# dtoverlay=uart4 
-# dtoverlay=uart5 
+# dtoverlay=uart2
+# dtoverlay=uart3
+# dtoverlay=uart4
+# dtoverlay=uart5
 #----------------------------------------------------------------------------
 # I2C    GPIO HEADER PIN
 #   Data   2       3
 #   Clock  3       5
-# 
+#
 #
 #
 #
