@@ -7,19 +7,24 @@ FollowMe.sh usage...
 --------------------
 
 ````
-  Change directory to your home directory."                            
-                                                                 
-     wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/Follow"
-                                                                   
-  Then run the script to change your RPi into a FlexBerry:"            
-                                                                   
-  The FollowMe script takes two parameters:"                           
-    1) The desired hostname"                                           
-    2) The desired username"                                           
-                                                                  
-     sudo bash FollowMe.sh flexberry itsme"                            
-                                                                   
-  This will take quite a while. There are over 30 packages to install."
+  Change directory to your home directory.
+
+     wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/Follow
+
+  Then run the script to change your RPi into a FlexBerry:
+
+  The FollowMe script takes two parameters:
+    1) The desired hostname
+    2) The desired username
+
+     sudo bash FollowMe.sh flexhost ishmael
+
+  In this example:
+     The host "flexhost" may be accesed with ssh as "flexhost.local"
+     The user we will call "ishmael" (your desired username))
+
+  This will take quite a while. There are over 30 packages to install.
+
 ````
 
 Overview
