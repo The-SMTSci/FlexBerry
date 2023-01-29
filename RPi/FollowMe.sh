@@ -14,7 +14,7 @@
 #    astrometry.net (that is handy locally)
 #    sextractor
 #
-#
+# Try to make this for multiple users (i.e. schools; shared facility users.)
 #
 # git/external/FlexSpec1/Code/rpi/FollowMe.sh
 # 2022-09-19T16:15:12-0600 wlg
@@ -32,7 +32,7 @@ apt-get update
 apt-get upgrade                          # N - keep the provider's /etc/apt-fast.conf
 apt-get dist-upgrade
 # (accumulate a) list of packages to make sure we have.
-flexpackages   = ("openssh-server" "linux-modules-extra-raspi" "net-tools" \
+flexpackages=("openssh-server" "linux-modules-extra-raspi" "net-tools" \
                   "gh" "curl" "gawk" "vim" "minicom" "git" "locate" "libx11-dev" \
                   "zlib1g-dev" "libxml2-dev" "libxslt1-dev" "autoconf" "swig" "putty" \
                   "python3-dev" "python3-pip" "python3-virtualenv" "sqlite3" \
@@ -40,25 +40,25 @@ flexpackages   = ("openssh-server" "linux-modules-extra-raspi" "net-tools" \
                   "build-essential" "apache2-utils" "filezilla" \
                   "nginx" "sqlite3" "indi-full" "gsc" "iraf" "python-pyraf3" )
 
-basepackages   = ("ufw" "systemctl" "bind9")
+basepackages=("ufw" "systemctl" "bind9")
 
-pythonpackages = ( "numpy" "scipy" "pandas" "matplotlib" "bokeh" "pandas" \
+pythonpackages=( "numpy" "scipy" "pandas" "matplotlib" "bokeh" "pandas" \
                    "astropy" "gunicorn" "pysqlite3" "xpa")
 
-usage   { echo "This script is located in a github repo:";
-          echo "/FlexSpec1/Code/rpi/FollowMe.sh";
-          echo "Run as root: ";
-          echo "mkdir -p /home/git";
-          echo "apt install -y git";
-          echo "cd /home/git";
-          echo "git clone https://github.com/The-SMTSci/FlexSpec1.git";
-          echo "cd /home/git/Code/rpi";
-          echo "bash FollowMe.sh";
-          echo "Packages: $flexpackages $basepackages $pythonpackages";
-          if test -e /sys/firmware/devicetree/base/model ; then
-              echo $(cat /sys/firmware/devicetree/base/model);
-          fi
-}
+function usage   { echo "This script is located in a github repo:";
+                   echo "/FlexSpec1/Code/rpi/FollowMe.sh";
+                   echo "Run as root: ";
+                   echo "mkdir -p /home/git";
+                   echo "apt install -y git";
+                   echo "cd /home/git";
+                   echo "git clone https://github.com/The-SMTSci/FlexSpec1.git";
+                   echo "cd /home/git/Code/rpi";
+                   echo "bash FollowMe.sh";
+                   echo "Packages: $flexpackages $basepackages $pythonpackages";
+                   if test -e /sys/firmware/devicetree/base/model ; then
+                       echo $(cat /sys/firmware/devicetree/base/model);
+                   fi
+                 }
 
 #############################################################################
 # The real work as root.
@@ -114,8 +114,8 @@ EOF1
 # apt clean
 apt     install -y ufw                       # uncomplicated firewall
 apt     install -y openssh-server            # add openssh capability
-systemctl status ssh                         # open the interface
-apt install -y supervisor                    # easily manage our servers
+systemctl --no-pager status ssh              # open the interface
+##apt install -y supervisor                  # easily manage our servers TODO why less?
 
 apt     install -y linux-modules-extra-raspi # raspi-config hardware/boot bridge
 apt     install -y net-tools                 # both ip ifconfig worlds
@@ -151,18 +151,18 @@ apt     install -y python3-dev python3-pip python3-virtualenv
 # Grab the initialization scripts,files and data from FlexSpec needs....
 # fixup $FLEXUSER/.bashrc
 #############################################################################
-cd ~/git                                     # get the FlexSpec and install
+cd /home/$FLEXUSER/git                                     # get the FlexSpec and install
 git clone https://github.com/The-SMTSci/FlexSpec1.git
 export ANCHOR=/home/$FLEXUSER/git/FlexSpec1
-cd ~/git/FlexSpec1/Code/HOME
-cp pi.aliases ~/.pi.aliases                  # handy aliases
-cp vimrc      ~/.vimrc
+cd /home/$FLEXUSER/git/FlexSpec1/Code/HOME
+cp pi.aliases /home/$FLEXUSER/.pi.aliases                  # handy aliases
+cp vimrc      /home/$FLEXUSER/.vimrc
 cp vimrc      /root                          # add a decent vimrc for sudo
 mkdir -p /var/www/html/FlexSpec1
-cp -pr ~/git/FlexSpec1/buil/hdtml/* /var/www/html/FlexSpec1 # install FlexHelp
+cp -pr /home/$FLEXUSER/git/FlexSpec1/build/html/* /var/www/html/FlexSpec1 # install FlexHelp
 
 # helper for flex login
-cd $HOME/$FLEXUSER
+cd /home/$FLEXUSER
 cat >> ~/.bashrc  <<EOF2                     # add our aliases for FLEXUSER
 source .pi.aliases
 EOF2
@@ -205,7 +205,7 @@ systemctl enable --now smbd                  # register for all reboots
 
 usermod -aG sambashare $FLEXUSER             # let $FLEXUSER share with smb.
 smbpasswd -a "flex%time has come"            # initial password...
-mkdir -p /samba/{$FLEXUSER,flex}             # make shares for the two main users
+mkdir -p /samba/{$FLEXUSER}                  # make shares for the two main users
 chgrp -R sambashare /samba
 
 #smb://winhost/shared-folder-name
