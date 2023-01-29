@@ -9,7 +9,7 @@ FollowMe.sh usage...
 ````
   Change directory to your home directory.
 
-     wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/Follow
+     wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/FollowMe.sh
 
   Then run the script to change your RPi into a FlexBerry:
 
