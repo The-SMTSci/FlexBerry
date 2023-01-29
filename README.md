@@ -2,6 +2,26 @@
 
 **WARNING: UNDER ACTIVE DEVELOPMENT JAN 2023**
 
+````
+FollowMe.sh usage..."
+  Change directory to your home directory."                            
+                                                                 
+     wget https://github.com/The-SMTSci/FlexBerry/blob/main/RPi/Follow"
+                                                                   
+  Then run the script to change your RPi into a FlexBerry:"            
+                                                                   
+  The FollowMe script takes two parameters:"                           
+    1) The desired hostname"                                           
+    2) The desired username"                                           
+                                                                  
+     sudo bash FollowMe.sh flexberry itsme"                            
+                                                                   
+  This will take quite a while. There are over 30 packages to install."
+````
+
+Overview
+--------
+
 A Raspberry Pi 4b implementation of Ubuntu 22.04 Desktop (not raspbian) for coordinated astronomy.
 
 1) Click on the green CODE button above.
