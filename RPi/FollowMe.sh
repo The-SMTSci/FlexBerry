@@ -133,7 +133,7 @@ EOF1
 # apt-get remove --purge libreoffice*        # remove libreoffice
 # apt clean
 apt     install -y ufw                       # uncomplicated firewall
-apt     install -y openssh-server            # add openssh capability
+apt     install -y openssh-server           # add openssh capability
 systemctl --no-pager status ssh              # open the interface
 ##apt install -y supervisor                  # easily manage our servers TODO why less?
 
@@ -152,6 +152,7 @@ if test -e /etc/alternatives/editor ; then
 fi
 
 apt     install -y minicom                   # because,,, handy interface to serial
+apt     install -y putty                     # install putty
 
 # Load these packages now, get it over with for local compiles.
 # Handy anyway.
@@ -173,8 +174,8 @@ apt     install -y python3-dev python3-pip python3-virtualenv
 # Load up Python3 with the extra bits we really want.
 # These support the FlexSpec Bokeh information, other visualizations.
 #############################################################################
-apt install sqlite3   sqlitebrowser          # lightweight database for general use.
-apt install pip
+apt install -y sqlite3   sqlitebrowser          # lightweight database for general use.
+apt install -y pip
 #apt install pypy
 pip install numpy
 pip install scipy
@@ -251,7 +252,7 @@ systemctl --no-pager restart nmbd                       # Microsoft NETBIOS stuf
 #############################################################################
 # NFS - for other linux like clients
 #############################################################################
-apt install nfs-kernel-server
+apt install -y nfs-kernel-server
 mkdir -p /mnt/share
 chown -R nobody:nogroup /mnt/share/
 chmod 777 /mnt/share/
@@ -266,7 +267,7 @@ systemctl --no-pager restart nfs-kernel-server          # start nfs
 
 #############################################################################
 # Install and configure nginx
-#   apt install nginx
+#   apt install -y nginx
 #   cp the files from FlexSpec repo into place
 #
 #############################################################################
