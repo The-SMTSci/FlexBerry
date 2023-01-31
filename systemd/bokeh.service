@@ -1,0 +1,17 @@
+# FlexSpec1/Code/FlexStatus/bokeh.service
+# This relies on FlexSpec1/Code/FlexStatus/flex.service to
+# buffer/interface with hardware.
+
+[Unit]
+Description=<FlexSpec bokeh server>
+
+[Service]
+User=root
+Before=flexdispatch.service
+Before=gunicorn.service
+WorkingDirectory=/tmp/flexspec
+ExecStart=/usr/local/bin/bokeh serve /home/flex/bin/FlexSpec.py --unused-session-lifetime 3600000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

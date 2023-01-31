@@ -1,0 +1,16 @@
+# FlexSpec1/Code/FlexStatus/flex.service
+# a basic socket server that queues messages between Users
+# and UART device, under a protocol.
+
+[Unit]
+Description=<FlexSpec dispatch server>
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/home/flex
+ExecStart=
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
