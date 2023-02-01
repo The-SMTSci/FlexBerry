@@ -8,6 +8,8 @@
 # 
 #############################################################################
 
+if [ "$USER" != "root" ]; then echo "Please run as root"; exit; fi
+
 useradd -m -d /home/flex -G dialout -p "$(openssl passwd -1 'happy startrails')" flex
 
 usermod -aG dialout $USER
@@ -66,9 +68,13 @@ git clone https://github.com/The-SMTSci/FlexSpec1.git
 cd ~/git/FlexSpec1/Code/HOME
 cp pi.aliases ~/.pi.aliases
 cp vimrc      ~/.vimrc
-cp vimrc /root                           # add a decent vimrc for sudo
-cd
+# copy the FlexSpec Documentation into the nginx server location.
+# access with http://localhost/FlexSpec
+mkdir -p /var/www/html/FlexSpec1
+cp ~/git/FlexSpec1/docs/build/html/* /var/www/html/FlexSpec1
 
+
+cd
 cat >> ~/.bashrc  <<EOF                       # add our aliases for USER
 source .pi.aliases
 EOF
@@ -110,8 +116,12 @@ pip3 install gunicorn
 pip3 install pysqlite3
 pip3 install netifaces                      # requred for RunFlexSpec test.
 
+# prepare FlexSpec to log to these files.
+mkdir -p /var/log/FlexSpec1
+touch /var/log/flexspec/{access,error}.log
 
 mkdir -p /var/log/nginx/flexspec/
+
 # create access and error logs for our instrument in usual place.
 touch /var/log/nginx/flexspec/{access,error}.log
 # install our pre-backed files

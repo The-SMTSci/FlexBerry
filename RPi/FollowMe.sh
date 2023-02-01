@@ -25,8 +25,8 @@
 # SYSTEMFILESNOW
 # BLEADINGEDGE
 
-APTINSTALL="install -qq"                    # Hey apt, errors only please.
-PIPQUIET="--quiet"
+echo "FollowMe.log" > /tmp/FollowMe.log
+echo $(date) >> /tmp/FollowMe.log
 
 function usage   { echo "FollowMe.sh usage..."
                    echo "  Change directory to your home directory."
@@ -48,6 +48,15 @@ function usage   { echo "FollowMe.sh usage..."
                    fi
                  }
 
+if [[ ! "root" =~ "$USER" ]] ; then
+   echo "Must be root, not $USER, to run. Use 'sudo -s bash FollowMe.sh' in terminal.";
+   usage
+   exit 1
+fi
+
+APTINSTALL="install -qq"                    # Hey apt, errors only please...
+PIPQUIET="--quiet"                          # ...pip too
+
 # make sure we have at least two parameters, hope they are in right
 # order.
 if [[ "$#" != 2 ]] ; then
@@ -59,19 +68,14 @@ if [[ "$#" != 2 ]] ; then
 fi
 
 ##############################################################################
-# Get the hostname and username in gear.
+# Process the parameters and get teh hostname and username in gear.
 #
 ##############################################################################
 scriptargs=("$@")
 export FLEXHOST=${scriptargs[0]}            # pick up the user for this script
 export FLEXUSER=${scriptargs[1]}            # pick up the user for this script
-echo "Using host=$FLEXHOST  user=$FLEXUSER"
+echo "Using host=$FLEXHOST  user=$FLEXUSER" >> /tmp/FollowMe.log
 
-
-if [[ ! "root" =~ "$USER" ]] ; then
-   echo "Must be root, not $USER, to run. Use 'sudo -s bash FollowMe.sh' in terminal.";
-   exit 1
-fi
 
 # good idea to do this when run if Flexspec user late to the party.
 apt-get update
@@ -91,6 +95,15 @@ basepackages=("ufw" "systemctl" "bind9")
 pythonpackages=( "numpy" "scipy" "pandas" "matplotlib" "bokeh" "pandas" \
                    "astropy" "gunicorn" "pysqlite3" "xpa" )
 
+echo "Base Packages" >>/tmp/FollowMe.log
+(for v in ${basepackages[@]} ; do echo "  $v" ; done) >>/tmp/FollowMe.log
+
+echo "Flex Packages" >>/tmp/FollowMe.log
+(for v in ${flexpackages[@]} ; do echo "  $v" ; done) >>/tmp/FollowMe.log
+
+echo "Python modules" >>/tmp/FollowMe.log
+(for v in ${pythonpackages[@]} ; do echo "  $v" ; done) >>/tmp/FollowMe.log
+
 
 #############################################################################
 # The real work as root.
@@ -99,8 +112,8 @@ pythonpackages=( "numpy" "scipy" "pandas" "matplotlib" "bokeh" "pandas" \
 # Make sure we have git and github's authentication
 # https://github.com/cli/cli/blob/trunk/docs/install_linux.md
 if [[ "$(which git)" == "" ]] ; then
-    apt $(APTIMSTALL) git -y;
-    type -p curl >/dev/null || apt $(APTIMSTALL) curl -y  # insgall curl as needed.
+    apt $(APTINSTALL) git -y;
+    type -p curl >/dev/null || apt $(APTIVSTALL) curl -y  # insgall curl as needed.
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
         chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null     && \
@@ -111,21 +124,25 @@ mkdir -p /home/git
 cd /home/git
 git clone https://github.com/The-SMTSci/FlexSpec1.git
 
+echo "Cloned The-SMTSci/FlexSpec1.git" >> /tmp/FollowMe.sh
 
 # get my local net, using...
 #export mylocalnet=$(ip r | gawk -- '/kernel/ {printf("%s", $1);}')
 
 #hostnamectl set-hostname pier15          # force hostname
 
-# add a special user, all system configuration activity here.
-useradd -m -d /home/$FLEXUSER -G dialout -p "$(openssl passwd -1 'happy startrails')" $FLEXUSER
+# add the main owner/user, all system configuration activity here.
+if test ! -e /home/$FLEXUSER; then
+    useradd -m -d /home/$FLEXUSER -G dialout -p "$(openssl passwd -1 'happy startrails')" $FLEXUSER
 
-usermod -aG dialout $FLEXUSER     # allow user 'flex' ability to use facilities
-usermod -aG tty     $FLEXUSER
+    usermod -aG dialout $FLEXUSER     # allow user 'flex' ability to use facilities
+    usermod -aG tty     $FLEXUSER
+fi
+echo "Added user $FLEXUSER" >> /tmp/FollowMe.sh
 
 # load up on packages!
 
-apt $(APTIMSTALL) gh -y
+apt $(APTINSTALL) gh -y
 cat >> /home/$FLEXUSER/todo.txt <<EOF1
 Github:
   - Using browser, login into your account
@@ -140,44 +157,67 @@ Github:
   -
 EOF1
 
+
+# the bash/gui tool for optional things to handle
+# if [[ ! "zenity" =~ "zenity" ]] ;then
+#    apt  $(APTINSTALL) -y zenity;
+# fi
+# zenity --forms --title="Create" --text="Options" \
+#    --add-entry="hostname" \
+#    --add-entry="username" 2>/dev/null
+# ask about packages... question returns 0=yes 1=no
+# zenity --question --text="Include IRAF/PyRAF?" 2>/dev/null
+# addiraf=$?
+# zenity   --question --text="Include Astromenry.net?" 2>/dev/null
+# addan=$?
+# options: iraf/astrometry.net/photometry/kstars vs libindi/samba/nfs
+
 ######################### Initial Batch of Installs #########################
 # apt-get remove --purge libreoffice*              # remove libreoffice
 # apt clean
-apt     $(APTIMSTALL) -y ufw                       # uncomplicated firewall
-apt     $(APTIMSTALL) -y openssh-server            # add openssh capability
+apt     $(APTINSTALL) -y ufw                       # uncomplicated firewall
+apt     $(APTINSTALL) -y openssh-server            # add openssh capability
 systemctl --no-pager status ssh                    # open the interface
 ##apt install -y supervisor                         # easily manage our servers TODO why less?
 
-apt     $(APTIMSTALL) -y linux-modules-extra-raspi # raspi-config hardware/boot bridge
-apt     $(APTIMSTALL) -y net-tools                 # both ip ifconfig worlds
-aot     $(APTIMSTALL) -y nmap                      # handy for network poking.
-apt     $(APTIMSTALL) -y curl                      # because,,, curl! (astrometry.net)
-apt     $(APTIMSTALL) -y gawk                      # IDIOTS -- don't ever use mawk!
-apt     $(APTIMSTALL) -y vim                       # because,,, vi!
+apt     $(APTINSTALL) -y linux-modules-extra-raspi # raspi-config hardware/boot bridge
+apt     $(APTINSTALL) -y net-tools                 # both ip ifconfig worlds
+aot     $(APTINSTALL) -y nmap                      # handy for network poking.
+apt     $(APTINSTALL) -y curl                      # because,,, curl! (astrometry.net)
+apt     $(APTINSTALL) -y gawk                      # IDIOTS -- don't ever use mawk!
+apt     $(APTINSTALL) -y vim                       # because,,, vi!
 
+echo "First load of basic packages" >> /tmp/FollowMe.log
 # Force VI as the editor. Really.
 if test -e /etc/alternatives/editor ; then
    if test -e /usr/bin/vim.basic ; then
        ln -s /usr/bin/vim.basic /etc/alternatives/editor
    fi
 fi
+echo "Fixed up VIM" >> /tmp/FollowMe.log
 
-apt     $(APTIMSTALL) -y minicom                   # because,,, handy interface to serial
-apt     $(APTIMSTALL) -y putty                     # install putty
+apt     $(APTINSTALL) -y minicom                   # because,,, handy interface to serial
+apt     $(APTINSTALL) -y putty                     # install putty
+
+echo "Added minicom and putty" >> /tmp/FollowMe.log
+
+
 
 # Load these packages now, get it over with for local compiles.
 # Handy anyway.
-apt     $(APTIMSTALL) -y locate                    # bacause,,, locate!
-apt     $(APTIMSTALL) -y build-essential           # get the compilers...
-apt     $(APTIMSTALL) -y libx11-dev                # needed for local compiles
-apt     $(APTIMSTALL) -y zlib1g-dev                # needed for local compiles
-apt     $(APTIMSTALL) -y libxml2-dev               # needed for local compiles
-apt     $(APTIMSTALL) -y libxslt1-dev              # needed for local compiles
-apt     $(APTIMSTALL) -y autoconf                  # needed for local compiles
+apt     $(APTINSTALL) -y locate                    # bacause,,, locate!
+apt     $(APTINSTALL) -y build-essential           # get the compilers...
+apt     $(APTINSTALL) -y libx11-dev                # needed for local compiles
+apt     $(APTINSTALL) -y zlib1g-dev                # needed for local compiles
+apt     $(APTINSTALL) -y libxml2-dev               # needed for local compiles
+apt     $(APTINSTALL) -y libxslt1-dev              # needed for local compiles
+apt     $(APTINSTALL) -y autoconf                  # needed for local compiles
+echo "Second batch of basic packages: X11, build, autoconf etc." >> /tmp/FollowMe.log
 
-# for astrometry.net
-apt     $(APTIMSTALL) -y swig
-apt     $(APTIMSTALL) -y python3-dev python3-pip python3-virtualenv
+# robustify the python
+apt     $(APTINSTALL) -y swig
+apt     $(APTINSTALL) -y python3-dev python3-pip python3-virtualenv
+echo "Robustified python" >> /tmp/FollowMe.log
 
 #############################################################################
 # This is a dedicated system, pound our opinion of python at the
@@ -185,19 +225,21 @@ apt     $(APTIMSTALL) -y python3-dev python3-pip python3-virtualenv
 # Load up Python3 with the extra bits we really want.
 # These support the FlexSpec Bokeh information, other visualizations.
 #############################################################################
-apt $(APTIMSTALL) -y sqlite3   sqlitebrowser       # lightweight database for general use.
-apt $(APTIMSTALL) -y pip
+apt $(APTINSTALL) -y sqlite3   sqlitebrowser       # lightweight database for general use.
+apt $(APTINSTALL) -y pip
 #apt install pypy
-pip3 $(APTIMSTALL) virtualenv    $PIPQUIET         # allow venvs
-pip3 $(APTIMSTALL) bokeh         $PIPQUIET         # important to flexspec
-pip3 $(APTIMSTALL) gunicorn      $PIPQUIET         # important to flexspec
-pip3 $(APTIMSTALL) numpy         $PIPQUIET         # the sciency stuff
-pip3 $(APTIMSTALL) scipy         $PIPQUIET
-pip3 $(APTIMSTALL) pandas        $PIPQUIET
-pip3 $(APTIMSTALL) matplotlib    $PIPQUIET
-pip3 $(APTIMSTALL) pandas        $PIPQUIET
-pip3 $(APTIMSTALL) astropy       $PIPQUIET         # astronomy stuff
-pip3 $(APTIMSTALL) pysqlite      $PIPQUIET         # support basic database
+pip3 $(APTINSTALL) virtualenv    $PIPQUIET         # allow venvs
+pip3 $(APTINSTALL) bokeh         $PIPQUIET         # important to flexspec
+pip3 $(APTINSTALL) gunicorn      $PIPQUIET         # important to flexspec
+pip3 $(APTINSTALL) numpy         $PIPQUIET         # the sciency stuff
+pip3 $(APTINSTALL) scipy         $PIPQUIET
+pip3 $(APTINSTALL) pandas        $PIPQUIET
+pip3 $(APTINSTALL) matplotlib    $PIPQUIET
+pip3 $(APTINSTALL) pandas        $PIPQUIET
+pip3 $(APTINSTALL) astropy       $PIPQUIET         # astronomy stuff
+pip3 $(APTINSTALL) pysqlite      $PIPQUIET         # support basic database
+
+echo "Pip packges flex needs for python" >> /tmp/FollowMe.log
 
 
 #############################################################################
@@ -206,37 +248,45 @@ pip3 $(APTIMSTALL) pysqlite      $PIPQUIET         # support basic database
 #############################################################################
 apt-add-repository ppa:mutlaqja/ppa                # Libindi etc.
 apt     update
-apt     $(APTIMSTALL)  -y indi-full                # indi and all drivers, never know.
-apt     $(APTIMSTALL)  -y kstars-bleeding          # get the most up-to-date ekos
-#apt     $(APTIMSTALL)  -y gsc                     # this is massive, ignore
+apt     $(APTINSTALL)  -y indi-full                # indi and all drivers, never know.
+apt     $(APTINSTALL)  -y kstars-bleeding          # get the most up-to-date ekos
+#apt     $(APTINSTALL)  -y gsc                     # this is massive, ignore
 #apt     install -y kstars-bleeding
+
+echo "Added kstars" >> /tmp/FollowMe.log
 
 #############################################################################
 # Add handy user code
 #############################################################################
-apt $(APTIMSTALL) -y filezilla                     # GUI to move files between systems
+apt $(APTINSTALL) -y filezilla                     # GUI to move files between systems
 
+echo "Added filezilla" >> /tmp/FollowMe.log
 
 # HEREHEREHERE
 #############################################################################
 # Grab the initialization scripts,files and data from FlexSpec needs....
 # fixup $FLEXUSER/.bashrc
 #############################################################################
-mkdir -p /home/$FLEXUSER/git                       # local repos in user space
-cd     /home/$FLEXUSER/git                         # get the FlexSpec and install
-git    clone https://github.com/The-SMTSci/FlexSpec1.git
-export ANCHOR=/home/$FLEXUSER/git/FlexSpec1
-cd     /home/$FLEXUSER/git/FlexSpec1/Code/HOME
-cp     pi.aliases /home/$FLEXUSER/.pi.aliases      # handy aliases
-cp     vimrc      /home/$FLEXUSER/.vimrc
-cp     vimrc      /root                            # add a decent vimrc for sudo
-mkdir -p /var/www/html/FlexSpec1
-cp     -pr /home/$FLEXUSER/git/FlexSpec1/build/html/* /var/www/html/FlexSpec1 # install FlexHelp
-cd     /home/$FLEXUSER
+if test ! -e " /home/$FLEXUSER" ; then
+    mkdir -p /home/$FLEXUSER/git                       # local repos in user space
+    cd     /home/$FLEXUSER/git                         # get the FlexSpec and install
+    git    clone https://github.com/The-SMTSci/FlexSpec1.git
+    export ANCHOR=/home/$FLEXUSER/git/FlexSpec1
+    cd     /home/$FLEXUSER/git/FlexSpec1/Code/HOME
+    cp     pi.aliases /home/$FLEXUSER/.pi.aliases      # handy aliases
+    cp     vimrc      /home/$FLEXUSER/.vimrc
+    cp     vimrc      /root                            # add a decent vimrc for sudo
+    mkdir -p /var/www/html/FlexSpec1
+    cp     -pr /home/$FLEXUSER/git/FlexSpec1/build/html/* /var/www/html/FlexSpec1 # install FlexHelp
+    cd     /home/$FLEXUSER
 
-# allow aliases for remote flex login. PuTTY uses .profile
-echo "source /home/$FLEXUSER/.pi.aliases" > /home/$FLEXUSER/.bashrc
-echo "source /home/$FLEXUSER/.pi.aliases" > /home/$FLEXUSER/.profile
+    # allow aliases for remote flex login. PuTTY uses .profile
+    echo "source /home/$FLEXUSER/.pi.aliases" > /home/$FLEXUSER/.bashrc
+    echo "source /home/$FLEXUSER/.pi.aliases" > /home/$FLEXUSER/.profile
+fi
+
+echo "Updated user's homedir with aliases and rc files" >> /tmp/FollowMe.log
+
 
 #############################################################################
 # Add Iraf/Pyraf! Yea.
@@ -245,8 +295,12 @@ echo "source /home/$FLEXUSER/.pi.aliases" > /home/$FLEXUSER/.profile
 apt install -y iraf
 apt install -y python-pyraf3
 
+echo "Added IRAF/PyRAF3" >> /tmp/FollowMe.log
+
 # make the user own their files
 chown -R $FLESUSER .                         # give all the files to the user.
+
+echo "Made user own their home directory" >> /tmp/FollowMe.log
 
 #############################################################################
 #############################################################################
@@ -264,10 +318,12 @@ chown -R $FLESUSER .                         # give all the files to the user.
 # DIFS is Common Internet Fileshares
 #############################################################################
 apt install -y samba samba-tools smbclient cifs-utils
+$(printf "[$FLEXUSER]\n   path = /samba/$FLEXUSER\n   available = yes\n   valid users = $FLEXUSER\n   read only = no\n   browsable = no\n   public = yes\n   writable = yes\n   force create mode = 0600\n   force directory mode = 2770\n   valid users = $FLEXUSER @sadmin") >> /etc/samba/smb.conf
+
 systemctl --no-pager enable --now smbd             # register for all reboots
 
 usermod -aG sambashare $FLEXUSER                   # let $FLEXUSER share with smb.
-smbpasswd -a "flex%time has come"                  # initial password...
+smbpasswd -w "flex%time has come" $FLEXUSER        # initial password...
 mkdir -p /samba/{$FLEXUSER}                        # make shares for the two main users
 chgrp -R sambashare /samba
 
@@ -275,6 +331,9 @@ chgrp -R sambashare /samba
 # TODO mod /etc/samba/smb.conf
 systemctl --no-pager restart smbd                  # Start the SMB service
 systemctl --no-pager restart nmbd                  # Microsoft NETBIOS stuff
+
+echo "Setup SMB" >> /tmp/FollowMe.log
+
 
 #############################################################################
 # NFS - for other linux like clients
@@ -285,6 +344,7 @@ chown -R nobody:nogroup /mnt/share/
 chmod 777 /mnt/share/
 exportfs -a
 systemctl --no-pager restart nfs-kernel-server     # start nfs
+echo "Setup NFS" >> /tmp/FollowMe.log
 
 # add daemons
 # cp ANCHOR/bokeh/bokeh.service /etc/systemd/system/bokeh.service
@@ -324,6 +384,9 @@ ln -s FlexSpec flexspec                            # allow lowercase name mainta
 # get it operational now.
 systemctl --no-pager restart nginx
 
+echo "Setup nginx" >> /tmp/FollowMe.log
+
+
 # Get the CIDR net/mask
 
 #setxkbmap us  # needed because initial install went sideways
@@ -336,6 +399,7 @@ systemctl --no-pager restart nginx
 #############################################################################
 apt install -y bind9 bind9-utils                   # DNS
 
+echo "Setup bind" >> /tmp/FollowMe.log
 
 
 #############################################################################
@@ -363,6 +427,8 @@ ufw allow 1194/udp                                   # VPN
 ufw allow 1194/tcp                                   # remember for next time TODO
 ufw disable
 ufw enable
+echo "Setup UFW firewall IP tables." >> /tmp/FollowMe.log
+ufw status >> /tmp/FollowMe.log
 
 # BLEADINGEDGE
 
@@ -407,7 +473,8 @@ ufw enable
 
 
 apt-get clean                               # remove all the package image files.
-
+date  >> /tmp/FollowMe.log
+echo "FollowMe Completed." >> /tmp/FollowMe.log
 echo "FollowMe Completed."
 
 

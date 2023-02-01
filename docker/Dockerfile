@@ -23,7 +23,6 @@ FROM ubuntu:22.04
 LABEL maintainer="Wayne Green <dxwayne@gmail.com>"
 LABEL build_date="2022-10-10"
 
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN=true
 
@@ -58,8 +57,15 @@ RUN htpasswd -b  /etc/nginx/.htpasswd flex  "flex"         # TODO  make more sec
 RUN bash -c 'rm /etc/alternatives/editor; ln -s /usr/bin/vim.basic /etc/alternatives/editor;'
 
 RUN apt-get install -y git                  # because,,, git! (astrometry.net)
-RUN apt-get install -y python3-pip
+RUN apt-get install -y python3-pip          # brings loads of stuff.
 RUN apt-get install -y python3-virtualenv   # good practice
+
+RUN apt-get install -y python3-dev \        # things to get for systemwide python
+	                   python3-astropy \
+	                   python3-numpy \
+	                   python3-scipy \
+	                   python3-setuptools \
+	                   python-is-python3
 
 RUN cd /home/flex                                                        && \
     mkdir -p /home/flex/git && cd /home/flex/git                         && \
