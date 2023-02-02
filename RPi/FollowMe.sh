@@ -14,7 +14,13 @@
 #    astrometry.net (that is handy locally)
 #    sextractor
 #
-# Try to make this for multiple users (i.e. schools; shared facility users.)
+#
+# TODO:
+#    push multiple users (i.e. for schools; shared facility users.)
+#    finish nginx install
+#    finish the bind9 needs
+#    VNC
+#    VPN
 #
 # git/external/FlexSpec1/Code/rpi/FollowMe.sh
 # 2022-09-19T16:15:12-0600 wlg
@@ -24,6 +30,12 @@
 # HEREHEREHERE
 # SYSTEMFILESNOW
 # BLEADINGEDGE
+
+# Set defaults for key bash 1variables.
+APTINSTALL=""                               # default to all ooutput
+PIPQUIET=""                                 # let pip be verbose
+FLEXUSER=""                                 # need user other than root
+FLEXHOST=""                                 # optional chance to change hostname
 
 echo "FollowMe.log" > /tmp/FollowMe.log
 echo $(date) >> /tmp/FollowMe.log
@@ -49,13 +61,19 @@ function usage   { echo "FollowMe.sh usage..."
                  }
 
 if [[ ! "root" =~ "$USER" ]] ; then
-   echo "Must be root, not $USER, to run. Use 'sudo -s bash FollowMe.sh' in terminal.";
+   echo "Must be root, not $USER, to run.";
+   echo "Use 'sudo -s bash FollowMe.sh <username> <hostname>' in terminal.";
    usage
    exit 1
 fi
 
+# Determine the verbosity.
+if test "$APTINSTALL" == "" ; then          # allow overide APTINSTALL=install
 APTINSTALL="install -qq"                    # Hey apt, errors only please...
+fi
+if test "$PIPQUIET" == "" ; then          # allow overide APTINSTALL=install
 PIPQUIET="--quiet"                          # ...pip too
+fi
 
 # make sure we have at least two parameters, hope they are in right
 # order.
@@ -72,10 +90,19 @@ fi
 #
 ##############################################################################
 scriptargs=("$@")
-export FLEXHOST=${scriptargs[0]}            # pick up the user for this script
-export FLEXUSER=${scriptargs[1]}            # pick up the user for this script
-echo "Using host=$FLEXHOST  user=$FLEXUSER" >> /tmp/FollowMe.log
+if test "${#scriptargs[@]}" > 0 ; then
+   export FLEXUSER=${scriptargs[0]}            # pick up the user for this script
+else
+   export FLEXUSER=$USER
+fi
 
+if test "${#scriptargs[@]}" > 1 ; then
+   export FLEXHOST=${scriptargs[1]}            # pick up the user for this script
+else
+   FLEXHOST=$(hostname)
+fi
+
+echo "Using host=$FLEXHOST  user=$FLEXUSER" >> /tmp/FollowMe.log
 
 # good idea to do this when run if Flexspec user late to the party.
 apt-get update
@@ -104,9 +131,8 @@ echo "Flex Packages" >>/tmp/FollowMe.log
 echo "Python modules" >>/tmp/FollowMe.log
 (for v in ${pythonpackages[@]} ; do echo "  $v" ; done) >>/tmp/FollowMe.log
 
-
 #############################################################################
-# The real work as root.
+# Establish all the git needs
 #############################################################################
 
 # Make sure we have git and github's authentication
@@ -127,21 +153,25 @@ git clone https://github.com/The-SMTSci/FlexSpec1.git
 echo "Cloned The-SMTSci/FlexSpec1.git" >> /tmp/FollowMe.sh
 
 # get my local net, using...
-#export mylocalnet=$(ip r | gawk -- '/kernel/ {printf("%s", $1);}')
+export MYLOCALNET=$(ip r | gawk -- '/kernel/ {printf("%s", $1);}')
+echo "The local net ip = $MYLOCALNET" >> /tmp/FollowMe
 
-#hostnamectl set-hostname pier15          # force hostname
+if test $FLEXHOST != "$(hostname)" ; then
+   hostnamectl set-hostname $FLEXHOST          # force hostname
+   echo "The hostname will be reset to $FLEXHOST on reboot." >> /tmp/FollowMe
+fi
 
 # add the main owner/user, all system configuration activity here.
 if test ! -e /home/$FLEXUSER; then
     useradd -m -d /home/$FLEXUSER -G dialout -p "$(openssl passwd -1 'happy startrails')" $FLEXUSER
-
     usermod -aG dialout $FLEXUSER     # allow user 'flex' ability to use facilities
     usermod -aG tty     $FLEXUSER
 fi
 echo "Added user $FLEXUSER" >> /tmp/FollowMe.sh
 
 # load up on packages!
-
+# We need github. Load the GitHub specialized git environment.
+# TODO flesh out the final steps for a user.
 apt $(APTINSTALL) gh -y
 cat >> /home/$FLEXUSER/todo.txt <<EOF1
 Github:
@@ -156,8 +186,10 @@ Github:
   - Do these steps:
   -
 EOF1
+echo "See /home/$FLEXUSER/todo.txt to compete gh use." >> /tmp/FollowMe
 
-
+#############################################################################
+# Hacking around with a GUI for completion. This is dead DNA.
 # the bash/gui tool for optional things to handle
 # if [[ ! "zenity" =~ "zenity" ]] ;then
 #    apt  $(APTINSTALL) -y zenity;
@@ -271,7 +303,7 @@ if test ! -e " /home/$FLEXUSER" ; then
     mkdir -p /home/$FLEXUSER/git                       # local repos in user space
     cd     /home/$FLEXUSER/git                         # get the FlexSpec and install
     git    clone https://github.com/The-SMTSci/FlexSpec1.git
-    export ANCHOR=/home/$FLEXUSER/git/FlexSpec1
+    export GITANCHOR=/home/$FLEXUSER/git/FlexSpec1
     cd     /home/$FLEXUSER/git/FlexSpec1/Code/HOME
     cp     pi.aliases /home/$FLEXUSER/.pi.aliases      # handy aliases
     cp     vimrc      /home/$FLEXUSER/.vimrc
@@ -329,14 +361,14 @@ chgrp -R sambashare /samba
 
 #smb://winhost/shared-folder-name
 # TODO mod /etc/samba/smb.conf
-systemctl --no-pager restart smbd                  # Start the SMB service
+systemctl --no-pager restart smbd                  # Start the SMB service, dont't be chatty
 systemctl --no-pager restart nmbd                  # Microsoft NETBIOS stuff
 
 echo "Setup SMB" >> /tmp/FollowMe.log
 
 
 #############################################################################
-# NFS - for other linux like clients
+# NFS - for other linux like clients, Microsoft Enterprise only.
 #############################################################################
 apt install -y nfs-kernel-server
 mkdir -p /mnt/share
@@ -347,8 +379,8 @@ systemctl --no-pager restart nfs-kernel-server     # start nfs
 echo "Setup NFS" >> /tmp/FollowMe.log
 
 # add daemons
-# cp ANCHOR/bokeh/bokeh.service /etc/systemd/system/bokeh.service
-# cp ANCHOR/bokeh/flexdispatch.service /etc/systemd/system/bokeh.service
+# cp GITANCHOR/bokeh/bokeh.service /etc/systemd/system/bokeh.service
+# cp GITANCHOR/bokeh/flexdispatch.service /etc/systemd/system/bokeh.service
 # systemctl daemon-reload
 # systemctl enable bokeh.service
 
@@ -369,15 +401,17 @@ mkdir -p /var/log/nginx/flexspec/                  # create a logfile directory
 # create access and error logs for our instrument in usual place.
 touch /var/log/nginx/flexspec/{access,error}.log   # and handy files for nginx
 # install our pre-backed files
-cp -pr $ANCHOR/FlexBerry/nginx/sites-available/flexspec/* /etc/nginx/sites-available/flexspec
-cp -pr $ANCHOR/FlexBerry/nginx/nginx.conf /etc/nginx/ # with logfile format.
+
+cp -pr $GITANCHOR/FlexBerry/nginx/sites-available/flexspec/* /etc/nginx/sites-available/flexspec
+cp -pr $GITANCHOR/FlexBerry/nginx/nginx.conf /etc/nginx/ # with logfile format.
 pushd /etc/nginx/sites-enabled
 ln -s ../sites-available/flexspec  flexspec        # link this in as enabled
 popd
-mkdir -p /var/www/html
+mkdir -p /var/www/html                             # location to put help info exists
 pushd /var/www/html
 mkdir FlexSpec
 ln -s FlexSpec flexspec                            # allow lowercase name maintain case sensitivity
+popd
 # make the nginx content
 #echo "make nginx"                                 # TODO
 
@@ -421,7 +455,7 @@ ufw allow from $cidrnet to any port 7654 proto tcp   # libindi
 ufw allow from $cidrnet to any port 7654 proto udp
 ufw allow from $cidrnet to any port  443 proto tcp   # https
 ufw allow from $cidrnet to any port  443 proto udp
-ufw allow from client_ip to any port samba
+ufw allow from client_ip to any port samba           # outside connections to...
 ufw allow from client_ip to any port nfs             # NFS share
 ufw allow 1194/udp                                   # VPN
 ufw allow 1194/tcp                                   # remember for next time TODO
@@ -477,5 +511,9 @@ date  >> /tmp/FollowMe.log
 echo "FollowMe Completed." >> /tmp/FollowMe.log
 echo "FollowMe Completed."
 
+apt install gnome-shell-extension-manager   # make it easier for user to ...
+apt install dconf-editor                    # ...manage gnome
+apt-get autoremove                          # clean out all un-necessary packages
+apt-get autoclean                           # drop any stored tarballs
 
 # End of Followme.sh
