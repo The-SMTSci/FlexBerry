@@ -110,17 +110,17 @@ apt-get upgrade                          # N - keep the provider's /etc/apt-fast
 apt-get dist-upgrade
 # (accumulate a) list of packages to make sure we have.
 flexpackages=("openssh-server" "linux-modules-extra-raspi" "net-tools" \
-                  "gh" "curl" "gawk" "vim" "minicom" "git" "locate" "libx11-dev" \
-                  "zlib1g-dev" "libxml2-dev" "libxslt1-dev" "autoconf" "swig" "putty" \
-                  "python3-dev" "python3-pip" "python3-virtualenv" "sqlite3" \
-                  "pip" "sqlitebrowser" "supervisor" "samba" "samba-tools" \
-                  "build-essential" "apache2-utils" "filezilla" \
-                  "nginx" "sqlite3" "indi-full" "gsc" "iraf" "python-pyraf3" )
+              "gh" "curl" "gawk" "vim" "minicom" "git" "locate" "libx11-dev" \
+              "zlib1g-dev" "libxml2-dev" "libxslt1-dev" "autoconf" "swig" "putty" \
+              "python3-dev" "python3-pip" "python3-virtualenv" "sqlite3" \
+              "pip" "sqlitebrowser" "supervisor" "samba" "samba-tools" \
+              "build-essential" "apache2-utils" "filezilla" \
+              "nginx" "sqlite3" "indi-full" "gsc" "iraf" "python-pyraf3" )
 
 basepackages=("ufw" "systemctl" "bind9")
 
 pythonpackages=( "numpy" "scipy" "pandas" "matplotlib" "bokeh" "pandas" \
-                   "astropy" "gunicorn" "pysqlite3" "xpa" )
+                 "astropy" "gunicorn" "pysqlite3" "xpa" )
 
 echo "Base Packages" >>/tmp/FollowMe.log
 (for v in ${basepackages[@]} ; do echo "  $v" ; done) >>/tmp/FollowMe.log
