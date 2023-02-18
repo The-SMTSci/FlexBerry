@@ -214,7 +214,7 @@ systemctl --no-pager status ssh                    # open the interface
 
 apt     $(APTINSTALL) -y linux-modules-extra-raspi # raspi-config hardware/boot bridge
 apt     $(APTINSTALL) -y net-tools                 # both ip ifconfig worlds
-aot     $(APTINSTALL) -y nmap                      # handy for network poking.
+apt     $(APTINSTALL) -y nmap                      # handy for network poking.
 apt     $(APTINSTALL) -y curl                      # because,,, curl! (astrometry.net)
 apt     $(APTINSTALL) -y gawk                      # IDIOTS -- don't ever use mawk!
 apt     $(APTINSTALL) -y vim                       # because,,, vi!
