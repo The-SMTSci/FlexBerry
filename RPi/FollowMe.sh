@@ -31,11 +31,21 @@
 # SYSTEMFILESNOW
 # BLEADINGEDGE
 
-# Set defaults for key bash 1variables.
-APTINSTALL=""                               # default to all ooutput
+# Establish and explain scrip-wide variables overide on command line.
+APTINSTALL=""                               # default to all output
 PIPQUIET=""                                 # let pip be verbose
-FLEXUSER=""                                 # need user other than root
-FLEXHOST=""                                 # optional chance to change hostname
+FLEXUSER="flex"                             # need user other than root
+FLEXHOST="flexberry"                        # optional chance to change hostname
+
+# Determine the verbosity.
+if test "$APTINSTALL" == "" ; then          # allow overide APTINSTALL=install
+APTINSTALL="install-qq"                     # Hey apt, errors only please...
+else
+APTINSTALL="install"
+fi
+if test "$PIPQUIET" == "" ; then            # allow overide APTINSTALL=install
+PIPQUIET="--quiet"                          # ...pip too
+fi
 
 echo "FollowMe.log" > /tmp/FollowMe.log
 echo $(date) >> /tmp/FollowMe.log
@@ -67,13 +77,6 @@ if [[ ! "root" =~ "$USER" ]] ; then
    exit 1
 fi
 
-# Determine the verbosity.
-if test "$APTINSTALL" == "" ; then          # allow overide APTINSTALL=install
-APTINSTALL="install -qq"                    # Hey apt, errors only please...
-fi
-if test "$PIPQUIET" == "" ; then          # allow overide APTINSTALL=install
-PIPQUIET="--quiet"                          # ...pip too
-fi
 
 # make sure we have at least two parameters, hope they are in right
 # order.
