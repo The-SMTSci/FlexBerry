@@ -79,10 +79,10 @@
 \endgroup
 \end{tcolorbox}
 \caption{#1}
-\label{fig:KStarsPreliminary}
+\label{fig:Snippet#2} % fig:<filename>
 \end{figure}
 }
-
+%  https://tex.stackexchange.com/questions/223363/breaking-problem-in-tcolorbox-break-at-breakable 
 \newcommand\inlinesnippet[1]{%
 \begin{figure}
 \begin{tcolorbox} [breakable,colback=yellow!99!black!20]
@@ -216,35 +216,37 @@ are included as well.
 
 This FlexBerry implementation uses Ubuntu 22.04 and NOT the Raspbian
 image based on Ubuntu programs. The prescription for making this
-system is contained in the GitHub repo TheSMTSci/FlexSpec1 repo. This
-must be installed on the FlexBerry early on during its creation. This
-document steps you through the install. See Section \ref{sec:raspbian}
+system is contained in the GitHub repo TheSMTSci/FlexBerry repo.
+Simply visit: \url{https://github.com/The-SMTSci/FlexBerry} and
+follow the instructions in the ReadeMe section of the first
+page.
 
-This section builds the first working image, copy this image to an
-iso file and make duplicate SD cards for use through out the system.
-A small script to adjust each macnine's host name and IP address is
-run for second/subsequent Raspberry Pis in the system.
+The process of making an \dhl{iso} file is tedious, onerous and cabable
+of damaging a system's file system in a very permenant way. The approach
+here is to ``build'' the complete system directly then locally copy the image
+to make backups.
 
-The main script is situated at \dhl{\$HOME/git/FlexSpec1/code/HOME/FollowMe.sh}
-in the git repository.
 
 The basic steps:
 \vspace{-.15cm}
 \begin{enumerate}\addtolength{\itemsep}{-0.5\baselineskip}
 %\setcounter{enumi}{N}
    \item   Get the Raspberry Imager if you don't have it.
-   \item   Dwonload the Ubuntu 22.04 image.
-   \item   Make the SD image.
-   \item   Insert the SD into a Raspberry Pi 4b with attached Monitor/keyboard/mouse.
+   \item   Download the Ubuntu 22.04.01 image.
+   \item   Create the SD card.
+   \item   Insert the SD into a Raspberry Pi 4B with attached Monitor/keyboard/mouse.
   This is needed to do a few very early steps.
    \item   Powerup/Boot the Raspberry Pi.
    \item   Take the usual Ubuntu quiz:\\
         username and password; machine name; country details etc.
-   \item   The machine will reboot.
-   \item   On the FlexBerry, open a terminal and start opening the new system up.
-   \item   Download the rasp-config materials.
-   \item   Run rasp-config and enable the serial port.
-   \item   Now you get to reboot.
+   \item   The machine grind away will reboot.
+   \item   After the reboot, open a terminal and start opening the new system up.
+   \item   Visit \url{https://github.com/The-SMTSci/FlexBerry}, Follow the Readme
+section to grab the \dhl{RPi/FollowMe.sh} script. Follow the instructions on the website.
+   \item   After the scipt finishes: \\
+     \dhl{sudo raspi-config}\\
+and enable the serial ports.
+   \item Reboot.
 \end{enumerate}
 
 Reboot with \dhl{sudo restart} command.
